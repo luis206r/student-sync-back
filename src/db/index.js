@@ -8,10 +8,10 @@ const config = require("../config/envs");
 // });
 
 const db = new Sequelize("student-collab-db",
-  "student_collab_db_user",
-  "Bvv64qjpivdjhhGmOrPyZG9EKz1SZ0nZ",
+  null,
+  null,
   {
-    host: "dpg-cp3h4tnsc6pc73fopjug-a",
+    host: "localhost",
     dialect: "postgres",
     port: 5432,
   });
