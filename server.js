@@ -8,7 +8,7 @@ const cors = require("cors");
 const envs = require("./src/config/envs");
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
-app.use(cors({ origin: "https://student-sync-pi.vercel.app/", credentials: true })); // para comunicar entre puertos
+app.use(cors({ origin: "https://student-sync-pi.vercel.app", credentials: true })); // para comunicar entre puertos
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -21,7 +21,7 @@ app.use("/api", routes);
 //   res.sendFile(path.join(__dirname, "public", "index.html"));
 // });
 
-db.sync({ force: false })
+db.sync()
   .then(() => {
     app.listen(8000, () => {
       console.log("Escuchando en el puerto 8000");
