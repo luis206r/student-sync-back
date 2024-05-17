@@ -13,6 +13,7 @@ const db = new Sequelize("student-collab-db",
   {
     host: "dpg-cp3h4tnsc6pc73fopjug-a",
     dialect: "postgres",
+    port: 5432,
   });
 
 db.authenticate()
