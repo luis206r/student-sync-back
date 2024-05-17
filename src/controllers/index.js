@@ -1,3 +1,4 @@
 const userController = require("./userController.js");
+const reportController = require("./reportController.js")
 
-module.exports = userController;
+module.exports = { userController, reportController };
