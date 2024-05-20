@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const config = require("../config/envs");
+import pg from 'pg';
 
 // const db = new Sequelize(config.NAME, config.USERNAME, config.PASSWORD, {
 //   host: config.DB_HOST,
@@ -7,7 +8,7 @@ const config = require("../config/envs");
 //   //logging: true,
 // });
 
-const db = new Sequelize("student-collab-db",
+const db = new Sequelize("student_collab_db",
   "student_collab_db_user",
   "Bvv64qjpivdjhhGmOrPyZG9EKz1SZ0nZ",
   {
@@ -23,5 +24,14 @@ db.authenticate()
   .catch((err) => {
     console.error("No se pudo conectar a la base de datos", err);
   })
+
+
+// const { Pool } = pg;
+
+// const db = new Pool({
+//   connectionString: process.env.POSTGRES_URL,
+// })
+
+
 
 module.exports = db;
