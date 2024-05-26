@@ -7,11 +7,13 @@ const controller = require("../controllers/index.js");
 
 const router = express.Router();
 
-router.post("/create/:studentId", controller.reportController.create);
+router.post("/create/:studentId", controller.taskController.create);
 
-router.get("/getReports/:studentId", controller.reportController.getReports);
+router.get("/getTasks/:studentId", controller.taskController.getTasks);
 
-router.delete("/deleteReport/:reportId", controller.reportController.deleteReport)
+router.delete("/deleteTask/:taskId", controller.taskController.deleteTask)
+
+router.put("/updateTask/:taskId", controller.taskController.updateTask)
 
 // router.post("/modify", reportController.modify);
 

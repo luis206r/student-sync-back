@@ -9,10 +9,13 @@ const router = express.Router();
 router.post("/register", controller.userController.register);
 
 router.post("/login", controller.userController.login);
+router.post("/googleLogin", controller.userController.googleLogin);
+router.post("/googleRegister", controller.userController.googleRegister);
 
 router.post("/logout", controller.userController.logout);
 
 router.get("/me", auth, controller.userController.me);
+router.get("/getAllUsers", controller.userController.getAllUsers);
 
 //router.put("/update", auth, userController.updateUser);
 
