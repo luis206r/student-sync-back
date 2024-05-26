@@ -12,7 +12,7 @@ const db = new Sequelize("student_collab_db",
   "student_collab_db_user",
   "Bvv64qjpivdjhhGmOrPyZG9EKz1SZ0nZ",
   {
-    host: "localhost",
+    host: "dpg-cp3h4tnsc6pc73fopjug-a",
     dialect: "postgres",
     port: 5432,
   });
