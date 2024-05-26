@@ -7,9 +7,11 @@ const controller = require("../controllers/index.js");
 
 const router = express.Router();
 
-router.post("/create/:userId", controller.reportController.create);
+router.post("/create/:studentId", controller.reportController.create);
 
-router.get("/getReports/:userId", controller.reportController.getReports);
+router.get("/getReports/:studentId", controller.reportController.getReports);
+
+router.delete("/deleteReport/:reportId", controller.reportController.deleteReport)
 
 // router.post("/modify", reportController.modify);
 

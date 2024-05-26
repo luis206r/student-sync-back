@@ -22,10 +22,11 @@ User.init(
     },
     salt: {
       type: S.DataTypes.STRING,
+      allowNull: true,
     },
     password: {
       type: S.DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     lastname: {
       type: S.DataTypes.STRING,
@@ -38,9 +39,17 @@ User.init(
     isAdmin: {
       type: S.DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    profileImageUrl: {
+      type: S.DataTypes.STRING,
+      allowNull: true,
+    },
+    role: {
+      type: S.DataTypes.STRING,
+      allowNull: false,
     }
   },
-  { sequelize: db, modelName: "user" }
+  { sequelize: db, modelName: "User" }
 );
 
 User.findUsers = (value) => {
@@ -54,19 +63,19 @@ User.findUsers = (value) => {
   })
 }
 
-User.beforeCreate((usuario, options) => {
-  const salt = bcrypt.genSaltSync(8);
-  usuario.salt = salt;
+// User.beforeCreate((usuario, options) => {
+//   const salt = bcrypt.genSaltSync(8);
+//   usuario.salt = salt;
 
-  return usuario
-    .generateHash(usuario.password, usuario.salt)
-    .then((hash) => (usuario.password = hash));
-});
+//   return usuario
+//     .generateHash(usuario.password, usuario.salt)
+//     .then((hash) => (usuario.password = hash));
+// });
 
-User.beforeUpdate((usuario, options) => {
-  return usuario
-    .generateHash(usuario.password, usuario.salt)
-    .then((hash) => (usuario.password = hash));
-});
+// User.beforeUpdate((usuario, options) => {
+//   return usuario
+//     .generateHash(usuario.password, usuario.salt)
+//     .then((hash) => (usuario.password = hash));
+// });
 
 module.exports = User;

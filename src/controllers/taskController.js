@@ -1,30 +1,23 @@
-const Report = require("../db/models/Report");
-const generateToken = require("../config/token");
-//const validate = require("../utils/validations");
-//import { transporter } from "../config/mailTRansporter";
-//import emailTemplates from "../utils/emailTemplates.ts";
-//import { Payload } from "../types/userTypes";
-const jwt = require("jsonwebtoken");
-const { User, Task } = require("../db/models");
-//import Sequelize, { Op } from "sequelize";
+const { Task } = require("../db/models");
+const { Student } = require("../db/models");
 
 const taskController = {
   create: async (req, res) => {
-    const user = await User.findByPk(req.params.userId);
-    if (!user) res.status(404).send({ message: 'User not found' });
+    const student = await Student.findByPk(req.params.studentId);
+    if (!student) res.status(404).send({ message: 'Student not found' });
     try {
       const {
-        status,
         content,
+        isCompleted,
       } = req.body;
 
       const newTask = await Task.create({
-        status,
         content,
-        userId: user.id
+        isCompleted,
+        StudentId: student.id
       });
-      const taskResponse = { ...newTask.toJSON() };
-      res.status(201).send(taskResponse);
+      //const TaskResponse = { ...newTask.toJSON() };
+      return res.status(201).send(newTask);
 
     } catch (err) {
       console.error(err);
@@ -32,19 +25,65 @@ const taskController = {
     }
   },
   getTasks: async (req, res) => {
-    const user = await User.findByPk(req.params.userId);
-    if (!user) res.status(404).send({ message: 'User not found' });
-    try {
 
-      const userTasks = await Task.findAll({
+    try {
+      const student = await Student.findByPk(req.params.studentId);
+      if (!student) res.status(404).send({ message: 'Student not found' });
+      const studentTasks = await Task.findAll({
         where: {
-          userId: user.id
-        }
+          StudentId: student.id
+        },
       });
 
-      //const reportResponse = { ...newReport.toJSON() };
-      res.status(200).send(userTasks);
+      //const TaskResponse = { ...newTask.toJSON() };
+      return res.status(200).send(studentTasks);
 
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+  deleteTask: async (req, res) => {
+    try {
+      // Buscar el Taske por su ID
+      const task = await Task.findByPk(req.params.taskId);
+
+      // Verificar si el Taske existe
+      if (!task) {
+        return res.status(404).send({ message: 'Task not found' });
+      }
+
+      // Eliminar el Taske usando Sequelize
+      await task.destroy();
+
+      // Enviar una respuesta de éxito
+      return res.status(200).send({ message: 'Tarea eliminada satisfactoriamente' });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+  updateTask: async (req, res) => {
+    try {
+      // Buscar el Taske por su ID
+      const task = await Task.findByPk(req.params.taskId);
+
+      if (!task) {
+        return res.status(404).send({ message: 'Task not found' });
+      }
+
+      const {
+        content,
+        isCompleted,
+      } = req.body;
+
+      task.content = content;
+      task.isCompleted = isCompleted;
+      await task.save();
+
+
+      // Enviar una respuesta de éxito
+      res.status(200).send({ message: 'Tarea actualizada correctamente' });
     } catch (err) {
       console.error(err);
       return res.status(500).send({ error: "Error interno del servidor." });

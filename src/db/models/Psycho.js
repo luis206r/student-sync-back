@@ -1,7 +1,8 @@
 const db = require("../index");
 const S = require("sequelize");
+const User = require("./User");
 
-class Report extends S.Model {
+class Psycho extends S.Model {
   // generateHash(password, salt) {
   //   return bcrypt.hash(password, salt);
   // }
@@ -13,26 +14,22 @@ class Report extends S.Model {
   // }
 }
 //i can get de created date and modified date with the sequelize inner propierties
-Report.init(
+Psycho.init(
   {
-    score: {
-      type: S.DataTypes.INTEGER,
+    spec: {
+      type: S.DataTypes.STRING,
       allowNull: false,
     },
-    // number: {
-    //   type: S.DataTypes.INTEGER,
-    //   allowNull: false,
-    // },
-    content: {
-      type: S.DataTypes.TEXT,
+    major: {
+      type: S.DataTypes.STRING,
       allowNull: false,
     },
   },
-  { sequelize: db, modelName: "Report" }
+  { sequelize: db, modelName: "Psycho" }
 );
 
-// Report.findReport = (value) => {
-//   return Report.findAll({
+// Psycho.findPsycho = (value) => {
+//   return Psycho.findAll({
 //     where: {
 //       [S.Op.or]: [
 //         { name: { [S.Op.iLike]: `%${value.toLowerCase()}%` } },
@@ -57,4 +54,4 @@ Report.init(
 //     .then((hash) => (usuario.password = hash));
 // });
 
-module.exports = Report;
+module.exports = Psycho;
