@@ -9,6 +9,7 @@ const envs = require("./src/config/envs");
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 app.use(cors({ origin: "https://student-collab.vercel.app", credentials: true })); // para comunicar entre puertos
+//app.use(cors({ origin: "http://localhost:5173", credentials: true })); // para comunicar entre puertos
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
