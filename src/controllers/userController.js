@@ -205,14 +205,25 @@ const userController = {
     }
   },
   logout: async (req, res) => {
-    const userToken = getUserTokenFromHeaders(req.headers);
-    if (!userToken) {
-      return res.status(400).send({ message: "No hay sesión iniciada." });
+    try {
+      console.log(req.headers);
+      const userToken = req.userToken;
+
+      if (!userToken) {
+        return res.status(400).send({ message: "No hay sesión iniciada." });
+      }
+      else {
+        res.clearCookie("userToken");
+        return res
+          .status(200)
+          .send({ message: "Sesión cerrada satisfactoriamente." });
+      }
     }
-    res.clearCookie("userToken");
-    return res
-      .status(200)
-      .send({ message: "Sesión cerrada satisfactoriamente." });
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+
   },
   me: async (req, res) => {
     const userId = req.user.id;
