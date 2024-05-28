@@ -5,7 +5,7 @@ const getUserTokenFromHeaders = require("../utils/getToken");
 const auth = async (req, res, next) => {
 
 
-  console.log("req header: ", req.headers)
+  console.log("req: ", req)
   const token = getUserTokenFromHeaders(req.headers);
   console.log(token);
 
