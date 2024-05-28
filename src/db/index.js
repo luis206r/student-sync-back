@@ -17,6 +17,15 @@ const db = new Sequelize("student_collab_db",
     port: 5432,
   });
 
+// const db = new Sequelize("student-collab-db",
+//   null, null,
+//   {
+//     //host: "postgres",
+//     dialect: "postgres",
+//     port: 5432,
+//     loggin: true
+//   });
+
 db.authenticate()
   .then(() => {
     console.log("Conexión a la base de datos", db.config.database);

@@ -9,19 +9,14 @@ const { Psycho } = require("../db/models");
 const { UtecMember } = require("../db/models");
 const { Student } = require("../db/models");
 const { Teacher } = require("../db/models");
+const getUserTokenFromHeaders = require("../utils/getToken");
 //import Sequelize, { Op } from "sequelize";
 
 const userController = {
   register: async (req, res) => {
+
     try {
-      const {
-        name,
-        lastname,
-        email,
-        password,
-        //isAdmin,
-        //profileImage,
-      } = req.body;
+      const { email, name, lastname, isAdmin, role, major, area, courses, spec, password } = req.body;
 
       // if (!validate.email(email)) {
       //   return res
@@ -30,23 +25,53 @@ const userController = {
       // }
 
       const existingUser = await User.findOne({ where: { email } });
-      if (existingUser) {
-        return res
-          .status(400)
-          .json({ error: "El correo electrónico ya está registrado." });
+      if (!existingUser) {
+
+        const newUser = await User.create({
+          name,
+          lastname,
+          email,
+          isAdmin, role,
+          password,
+          isAdmin,
+          //profileImage,
+        });
+        let newRole;
+        if (role == "psycho") {
+          newRole = await Psycho.create({
+            spec,
+            major,
+            userId: newUser.id
+          });
+        }
+        else if (role == "other") {
+          newRole = await UtecMember.create({
+            area,
+            major,
+            userId: newUser.id
+          });
+        }
+        else if (role == "teacher") {
+          newRole = await Teacher.create({
+            courses,
+            major,
+            userId: newUser.id
+          });
+        }
+        else if (role == "student") {
+          newRole = await Student.create({
+            major,
+            userId: newUser.id
+          });
+        }
+        return res.status(201).send({ newUser, newRole });
       }
-      const newUser = await User.create({
-        name,
-        lastname,
-        email,
-        password,
-        //isAdmin,
-        //profileImage,
-      });
-      const userResponse = { ...newUser.toJSON(), password: undefined };
+      else {
+        return res.send({ message: "este correo ya está registrado" }).status(400);
+      }
       //const mailOptions = emailTemplates.welcome(userResponse);
       //await transporter.sendMail(mailOptions);
-      res.status(201).send(userResponse);
+
     } catch (err) {
       console.error(err);
       return res.status(500).send({ error: "Error interno del servidor." });
@@ -79,12 +104,14 @@ const userController = {
       const token = generateToken({
         id: existingUserToJson.id,
         isAdmin: existingUserToJson.isAdmin,
+        role: existingUserToJson.role
       });
       //res.cookie("token", token, { httpOnly: true });
       res.cookie("userToken", token);
       return res.status(200).json({
         message: "Usuario logeado con éxito.",
         isAdmin: existingUserToJson.isAdmin,
+        isRegistered: true
       });
     } catch (err) {
       console.error(err);
@@ -123,7 +150,7 @@ const userController = {
     }
   },
   googleRegister: async (req, res) => {
-    const { email, name, lastname, profileImageUrl, isAdmin, role, major, area, courses, spec } = req.body;
+    const { email, name, lastname, profileImageUrl, isAdmin, role, major, area, courses, spec, password } = req.body;
     try {
       const existingUser = await User.findOne({ where: { email } });
       if (!existingUser) {
@@ -133,7 +160,9 @@ const userController = {
           email,
           isAdmin,
           profileImageUrl,
-          role
+          role,
+          password,
+          hasGoogleAcces: true,
         });
         let newRole;
         if (role == "psycho") {
@@ -176,7 +205,8 @@ const userController = {
     }
   },
   logout: async (req, res) => {
-    if (!req.cookies.userToken) {
+    const userToken = getUserTokenFromHeaders(req.headers);
+    if (!userToken) {
       return res.status(400).send({ message: "No hay sesión iniciada." });
     }
     res.clearCookie("userToken");
@@ -265,6 +295,22 @@ const userController = {
       });
 
       return res.status(200).send({ students: students, teachers: teachers, psychos: psychos, others: others });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send("Error de servidor");
+    }
+  },
+  findByEmail: async (req, res) => {
+
+    try {
+      const email = req.body.email;
+      const user = await User.findOne({
+        where: { email: email }
+      });
+      if (!user) {
+        return res.status(404).send({ message: "Usuario no encontrado." });
+      }
+      return res.status(200).send({ message: "Usuario encontrado", user: user });
     } catch (error) {
       console.error(error);
       return res.status(500).send("Error de servidor");

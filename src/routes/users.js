@@ -16,6 +16,8 @@ router.post("/logout", controller.userController.logout);
 
 router.get("/me", auth, controller.userController.me);
 router.get("/getAllUsers", controller.userController.getAllUsers);
+router.post("/findEmail", controller.userController.findByEmail);
+
 
 //router.put("/update", auth, userController.updateUser);
 

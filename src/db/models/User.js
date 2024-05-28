@@ -47,6 +47,11 @@ User.init(
     role: {
       type: S.DataTypes.STRING,
       allowNull: false,
+    },
+    hasGoogleAcces: {
+      type: S.DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   },
   { sequelize: db, modelName: "User" }
@@ -63,19 +68,19 @@ User.findUsers = (value) => {
   })
 }
 
-// User.beforeCreate((usuario, options) => {
-//   const salt = bcrypt.genSaltSync(8);
-//   usuario.salt = salt;
+User.beforeCreate((usuario, options) => {
+  const salt = bcrypt.genSaltSync(8);
+  usuario.salt = salt;
 
-//   return usuario
-//     .generateHash(usuario.password, usuario.salt)
-//     .then((hash) => (usuario.password = hash));
-// });
+  return usuario
+    .generateHash(usuario.password, usuario.salt)
+    .then((hash) => (usuario.password = hash));
+});
 
-// User.beforeUpdate((usuario, options) => {
-//   return usuario
-//     .generateHash(usuario.password, usuario.salt)
-//     .then((hash) => (usuario.password = hash));
-// });
+User.beforeUpdate((usuario, options) => {
+  return usuario
+    .generateHash(usuario.password, usuario.salt)
+    .then((hash) => (usuario.password = hash));
+});
 
 module.exports = User;

@@ -1,9 +1,13 @@
 //import { Payload } from "../types/userTypes";
 const jwt = require("jsonwebtoken");
+const getUserTokenFromHeaders = require("../utils/getToken");
 
 const auth = async (req, res, next) => {
 
-  const token = req.cookies.userToken;
+
+  console.log("req header: ", req.headers)
+  const token = getUserTokenFromHeaders(req.headers);
+  console.log(token);
 
   if (!token) {
     return res.status(401).json({ message: "No token, authorization denied" });
