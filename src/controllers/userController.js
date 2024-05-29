@@ -1,5 +1,5 @@
 const { User } = require("../db/models");
-const generateToken = require("../config/token");
+
 //const validate = require("../utils/validations");
 //import { transporter } from "../config/mailTRansporter";
 //import emailTemplates from "../utils/emailTemplates.ts";
@@ -10,6 +10,7 @@ const { UtecMember } = require("../db/models");
 const { Student } = require("../db/models");
 const { Teacher } = require("../db/models");
 const getUserTokenFromHeaders = require("../utils/getToken");
+const { generateToken } = require("../config/token");
 //import Sequelize, { Op } from "sequelize";
 
 const userController = {
@@ -101,17 +102,20 @@ const userController = {
 
       const existingUserToJson = existingUser.toJSON();
 
-      const token = generateToken({
+      const payload = {
         id: existingUserToJson.id,
         isAdmin: existingUserToJson.isAdmin,
         role: existingUserToJson.role
-      });
+      }
+
+      const token = generateToken(payload);
       //res.cookie("token", token, { httpOnly: true });
-      res.cookie("userToken", token);
-      return res.status(200).json({
+      // res.cookie("userToken", token);
+      return res.status(200).send({
         message: "Usuario logeado con éxito.",
         isAdmin: existingUserToJson.isAdmin,
-        isRegistered: true
+        isRegistered: true,
+        token: token
       });
     } catch (err) {
       console.error(err);
@@ -131,17 +135,21 @@ const userController = {
         await existingUser.save();
       }
       const existingUserToJson = existingUser.toJSON();
-      const token = generateToken({
+
+      const payload = {
         id: existingUserToJson.id,
         isAdmin: existingUserToJson.isAdmin,
         role: existingUserToJson.role
-      });
+      }
+
+      const token = generateToken(payload);
       //res.cookie("token", token, { httpOnly: true });
-      res.cookie("userToken", token);
-      return res.status(200).json({
+      // res.cookie("userToken", token);
+      return res.status(200).send({
         message: "Usuario logeado con éxito.",
         isAdmin: existingUserToJson.isAdmin,
-        isRegistered: true
+        isRegistered: true,
+        token: token
       });
 
     } catch (err) {
@@ -206,18 +214,12 @@ const userController = {
   },
   logout: async (req, res) => {
     try {
-      console.log(req.headers);
-      const userToken = req.userToken;
 
-      if (!userToken) {
-        return res.status(400).send({ message: "No hay sesión iniciada." });
-      }
-      else {
-        res.clearCookie("userToken");
-        return res
-          .status(200)
-          .send({ message: "Sesión cerrada satisfactoriamente." });
-      }
+      res.clearCookie("userToken");
+      return res
+        .status(200)
+        .send({ message: "Sesión cerrada satisfactoriamente." });
+
     }
     catch (err) {
       console.error(err);
@@ -226,41 +228,43 @@ const userController = {
 
   },
   me: async (req, res) => {
-    const userId = req.user.id;
-    const role = req.user.role;
-    if (!userId || !role) {
-      return res.status(400).send({ message: "id no encontrado en el token." });
-    }
+
     try {
-      const user = await User.findOne({
-        where: { id: userId },
-        attributes: [
-          "name",
-          "lastname",
-          "email",
-          "isAdmin",
-          "profileImageUrl",
-          "role"
-        ],
-        include: [
-          {
-            model: role === "student" ? Student : role === "teacher" ? Teacher : role === "psycho" ? Psycho : UtecMember,
-            required: false,
-            as: `${role}Info`,
-
-          }
-
-        ]
-      });
-      if (!user) {
-        return res.status(404).json({ message: "Usuario no encontrado." });
+      const id = req.user.id;
+      const role = req.user.role;
+      if (!id) {
+        return res.status(400).send({ message: "id no encontrado en el token." });
       }
-      return res
-        .send({
-          id: userId,
+      else {
+        const user = await User.findOne({
+          where: { id: id },
+          attributes: [
+            "name",
+            "lastname",
+            "email",
+            "isAdmin",
+            "profileImageUrl",
+            "role"
+          ],
+          include: [
+            {
+              model: role === "student" ? Student : role === "teacher" ? Teacher : role === "psycho" ? Psycho : UtecMember,
+              required: false,
+              as: `${role}Info`,
+
+            }
+
+          ]
+        });
+        if (!user) {
+          return res.status(404).json({ message: "Usuario no encontrado." });
+        }
+        return res.status(200).send({
+          id: id,
           ...user.get({ plain: true }),
         })
-        .status(200);
+          .status(200);
+      }
     } catch (error) {
       console.error(error);
       return res.status(500).send("Error de servidor");
