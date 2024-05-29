@@ -2,8 +2,17 @@ const jwt = require("jsonwebtoken");
 //import { Payload } from "../types/userTypes";
 
 const generateToken = (payload) => {
-  const token = jwt.sign({ user: payload }, process.env.JWT_SECRET || 'milanesa', { expiresIn: '2d' });
+  const token = jwt.sign({ user: payload }, "milanesa", { expiresIn: '6d' });
   return token;
 };
 
-module.exports = generateToken;
+const validateToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, "milanesa");
+    return decoded.user;
+  } catch (error) {
+    return null;
+  }
+};
+
+module.exports = { generateToken, validateToken };

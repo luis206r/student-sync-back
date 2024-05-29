@@ -2,18 +2,26 @@
 const jwt = require("jsonwebtoken");
 const getUserTokenFromHeaders = require("../utils/getToken");
 
+
 const auth = async (req, res, next) => {
 
 
-  console.log("req header: ", req.headers)
-  const token = getUserTokenFromHeaders(req.headers);
-  console.log(token);
+  // console.log("req header: ", req.headers)
+  //const token = getUserTokenFromHeaders(req.headers);
+  //console.log(token);
+  const token = req.header('Authorization').substring('Bearer '.length);
+  console.log("token ===>", token);
+
+  if (!token) {
+    console.log("there's no token");
+    return res.sendStatus(401);
+  }
 
   if (!token) {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, "milanesa");
     req.user = decoded.user;
     next();
   } catch (error) {
