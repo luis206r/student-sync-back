@@ -1,4 +1,4 @@
-const { User } = require("../db/models");
+const { User, Follower } = require("../db/models");
 
 //const validate = require("../utils/validations");
 //import { transporter } from "../config/mailTRansporter";
@@ -11,6 +11,7 @@ const { Student } = require("../db/models");
 const { Teacher } = require("../db/models");
 const getUserTokenFromHeaders = require("../utils/getToken");
 const { generateToken } = require("../config/token");
+const { response } = require("../../server");
 //import Sequelize, { Op } from "sequelize";
 
 const userController = {
@@ -252,13 +253,27 @@ const userController = {
               required: false,
               as: `${role}Info`,
 
+            },
+            {
+              model: User,
+              as: "followers",
+              through: { model: Follower, attributes: [] },
+              foreignKey: "followedId",
+              attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+            },
+            {
+              model: User,
+              as: "follows",
+              through: { model: Follower, attributes: [] },
+              foreignKey: "followerId",
+              attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
             }
-
           ]
         });
         if (!user) {
           return res.status(404).json({ message: "Usuario no encontrado." });
         }
+
         return res.status(200).send({
           id: id,
           ...user.get({ plain: true }),
@@ -331,6 +346,97 @@ const userController = {
       return res.status(500).send("Error de servidor");
     }
   },
+  addFollower: async (req, res) => {
+    try {
+      const { followUserId, followerUserId } = req.body;
+      if (followUserId === followerUserId)
+        return res.status(400).send({ message: "solicitud incorrecta" });
+      else {
+        //verificar existencia de usuarios
+        const followUser = await User.findByPk(followUserId);
+        const followerUser = await User.findByPk(followerUserId);
+
+        if (!followUser || !followerUser) {
+          return res.status(404).send({ message: "Uno o ambos usuarios no existen" });
+        }
+        else {
+          const newFollow = await Follower.create({
+            followedId: followUserId,
+            followerId: followerUserId,
+          });
+          console.log(newFollow);
+          return res.status(201).send({ message: "solicitud realizada correctamente" });
+        }
+      }
+    }
+    catch (err) {
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).send({ message: "La solicitud ya ha sido realizada previamente" });
+      } else {
+        console.error(err);
+        return res.status(500).send("Error de servidor");
+      }
+    }
+  },
+  removeFollower: async (req, res) => {
+    try {
+      const { followUserId, followerUserId } = req.body;
+      if (followUserId === followerUserId)
+        return res.status(400).send({ message: "solicitud incorrecta" });
+      else {
+        //verificar existencia de usuarios
+        const followUser = await User.findByPk(followUserId);
+        const followerUser = await User.findByPk(followerUserId);
+        if (!followUser || !followerUser) {
+          return res.status(404).send({ message: "Uno o ambos usuarios no existen" });
+        }
+        else {
+          const removeFollower = await Follower.destroy({
+            where: {
+              followedId: followUserId,
+              followerId: followerUserId,
+            }
+          });
+          console.log(removeFollower);
+          return res.status(200).send({ message: "solicitud realizada correctamente" });
+        }
+      }
+    }
+    catch (err) {
+      console.error(err);
+      return res.status(500).send("Error de servidor");
+    }
+  },
+  getFollowers: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).send({ message: "Usuario no encontrado" });
+      }
+
+      const followers = await user.getFollowers();
+      return res.status(200).send({ followers: followers });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send("Error de servidor");
+    }
+  },
+  getFollows: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).send({ message: "Usuario no encontrado" });
+      }
+
+      const follows = await user.getFollows();
+      return res.status(200).send({ follows: follows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send("Error de servidor");
+    }
+  }
 
 }
 
