@@ -17,13 +17,18 @@ class Post extends S.Model {
 Post.init(
   {
     content: {
-      type: S.DataTypes.STRING,
+      type: S.DataTypes.TEXT,
       allowNull: false,
     },
     images: { //images url
       type: S.DataTypes.ARRAY(S.DataTypes.STRING),
       allowNull: true,
     },
+    driveId: {
+      type: S.DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    }
   },
   { sequelize: db, modelName: "Post" }
 );
