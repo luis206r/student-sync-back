@@ -13,5 +13,8 @@ router.get("/getTest", controller.contentController.testGetUrl);
 router.get("/getPosts", controller.contentController.getPosts);
 router.delete("/deletePost/:contentId", controller.contentController.deletePost);
 
+router.post("/addReaction/:userId/:contentId", controller.contentController.addReaction);
+router.delete("/removeReaction/:userId/:contentId", controller.contentController.removeReaction);
+
 
 module.exports = router;  

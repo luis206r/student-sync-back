@@ -97,6 +97,10 @@ Psycho.belongsToMany(Student, { through: 'StudentPsycho', as: "studentsToAdvise"
 //UtecMember
 //UtecMember.belongsTo(User);
 
+//Reaction
+//Reaction.belongsTo(User);
+//Reaction.belongsTo(Content);
+
 
 
 

@@ -1,5 +1,5 @@
 const { response } = require("../../server");
-const { Post, Content, User } = require("../db/models");
+const { Post, Content, User, Reaction } = require("../db/models");
 const { authorize, uploadFile, getFileDownloadUrl, deleteFileFromDrive } = require("../utils/driveUpload/driveUpload");
 const fs = require('fs');
 
@@ -89,7 +89,7 @@ const contentController = {
   },
   getPosts: async (req, res) => {
     try {
-      const posts = await Content.findAll({
+      const posts = await Content.findAll({ //es una Array de contents, y dentro de cada content esta el post asociado, junto con la informacion del usuario creador.
         where: {
           type: "post",
 
@@ -102,9 +102,20 @@ const contentController = {
           {
             model: User,
             attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
-          }
+          },
         ]
-      })
+      });
+
+      const contentIds = posts.map(post => post.id);
+      const reactions = await Reaction.findAll({
+        where: { ContentId: contentIds }, // Filtrar por los ids de contenido encontrados
+      });
+
+      posts.forEach(post => {
+        const postReactions = reactions.filter(reaction => reaction.ContentId === post.id);
+        post.dataValues.reactions = postReactions;
+      });
+
       return res.status(200).send({ posts: posts });
     }
     catch (err) {
@@ -146,7 +157,68 @@ const contentController = {
       console.error(err);
       return res.status(500).send({ error: "Error interno del servidor." });
     }
-  }
+  },
+  addReaction: async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const contentId = req.params.contentId;
+      const type = req.body.type;
+
+      // Validar la existencia del usuario y el contenido
+      const user = await User.findOne({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).send({ error: "Usuario no encontrado." });
+      }
+
+      const content = await Content.findOne({ where: { id: contentId } });
+      if (!content) {
+        return res.status(404).send({ error: "Contenido no encontrado." });
+      }
+
+      // Verificar si ya existe una reacción para este usuario y contenido
+      let reaction = await Reaction.findOne({ where: { UserId: userId, ContentId: contentId } });
+      if (reaction) {
+        // Si existe, actualizar el tipo de reacción
+        await reaction.update({ type: type });
+        return res.status(200).send({ reaction: reaction });
+      }
+
+      // Si no existe una reacción, crear una nueva
+      reaction = await Reaction.create({
+        type: type,
+        UserId: userId,
+        ContentId: contentId,
+      });
+
+      res.status(201).send(reaction);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+
+  removeReaction: async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const contentId = req.params.contentId;
+      if (!userId || !contentId) res.status(500).send({ message: 'no hay params' });
+      //validar id de usuario
+      const user = await User.findOne({ where: { id: userId } });
+      //validar id de contenido
+      const content = await Content.findOne({ where: { id: contentId } });
+      if (!user || !content) res.status(500).send({ message: 'no hay usuario o contenido' });
+
+      await Reaction.destroy({ where: { ContentId: content.id, UserId: user.id } });
+      //await content.addUser(user);
+      //await user.addContent(content);
+      res.status(200).send({ message: "operacion realizada" });
+
+    }
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
 }
 
 module.exports = contentController;
