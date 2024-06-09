@@ -44,6 +44,7 @@ User.hasOne(Student, { as: "studentInfo", foreignKey: "userId" });
 User.hasOne(Teacher, { as: "teacherInfo", foreignKey: "userId" });
 User.hasOne(UtecMember, { as: "otherInfo", foreignKey: "userId" });
 User.hasOne(Psycho, { as: "psychoInfo", foreignKey: "userId" });
+User.hasMany(Comment, { as: 'userComments', foreignKey: 'userId' });
 
 //Content
 Content.belongsTo(User);
@@ -57,6 +58,7 @@ Content.hasOne(Event, { as: "eventInfo", foreignKey: "contentId" });
 Comment.belongsTo(Content, { as: "parentContent" });
 Comment.hasMany(Comment, { as: "subComments", foreignKey: "parentCommentId" })
 Comment.belongsTo(Comment, { as: "parentComment", foreignKey: "parentCommentId" })
+Comment.belongsTo(User, { as: 'commentOwner', foreignKey: 'userId' });
 
 //Post
 //Post.belongsTo(Content);

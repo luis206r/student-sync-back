@@ -1,5 +1,5 @@
 const { response } = require("../../server");
-const { Post, Content, User, Reaction } = require("../db/models");
+const { Post, Content, User, Reaction, Comment } = require("../db/models");
 const { authorize, uploadFile, getFileDownloadUrl, deleteFileFromDrive } = require("../utils/driveUpload/driveUpload");
 const fs = require('fs');
 
@@ -102,6 +102,29 @@ const contentController = {
           {
             model: User,
             attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+          },
+          {
+            model: Comment,
+            as: "comments",
+            //attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+            include: [
+              {
+                model: User,
+                as: "commentOwner",
+                attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+              },
+              {
+                model: Comment,
+                as: "subComments",
+                include: [
+                  {
+                    model: User,
+                    as: "commentOwner",
+                    attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+                  },
+                ]
+              }
+            ]
           },
         ]
       });
@@ -219,6 +242,105 @@ const contentController = {
       return res.status(500).send({ error: "Error interno del servidor." });
     }
   },
+
+  addComment: async (req, res) => { //agregar comentario normal,
+    try {
+      const { text } = req.body;
+      const { userId, contentId } = req.params;
+      if (!userId || !contentId || !text) return res.status(404).send({ error: 'No hay parametros' });
+
+      const user = await User.findOne({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).send({ error: "Usuario no encontrado." });
+      }
+
+      const content = await Content.findOne({ where: { id: contentId } });
+      if (!content) {
+        return res.status(404).send({ error: "Contenido no encontrado." });
+      }
+
+      const comment = await Comment.create({
+        content: text,
+        numberOfReactions: 0,
+        level: 1,
+        ContentId: content.id,
+        //parentContentId: null,
+        //parentCommentId: null,
+        userId: user.id
+
+
+      })
+      await comment.setCommentOwner(user);
+      //const cms = await u.getComments();
+      res.status(201).send({ createdComment: comment })
+    }
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+
+  addSubComment: async (req, res) => { //agregar comentario normal,
+    try {
+      const { text } = req.body;
+      const { userId, parentCommentId } = req.params;
+      if (!userId || !parentCommentId || !text) return res.status(404).send({ error: 'No hay parametros' });
+
+      const user = await User.findOne({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).send({ error: "Usuario no encontrado." });
+      }
+
+      const parentComment = await Comment.findOne({ where: { id: parentCommentId } });
+
+      if (!parentComment) {
+        return res.status(404).send({ error: "Comentario no encontrado." });
+      }
+
+
+      const subComment = await Comment.create({
+        content: text,
+        numberOfReactions: 0,
+        level: 2,
+        //ContentId: c.id,
+        //parentContentId: null,
+        parentCommentId: parentComment.id,
+        userId: user.id
+      })
+      await subComment.setParentComment(parentComment);
+      await subComment.setCommentOwner(user);
+      //const cms = await u.getComments();
+      res.status(201).send({ createdSubComment: subComment })
+    }
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+  deleteComment: async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      if (!commentId) return res.status(404).send({ error: "No hay parametro" });
+      const comment = await Comment.findOne({ where: { id: commentId } });
+      if (!comment) {
+        return res.status(404).send({ error: "Comentario no encontrado." });
+      }
+      if (comment.level === 1) {
+        const sc = await comment.getSubComments();
+        if (sc.length > 0) {
+          await comment.update({ content: null });
+          return res.status(200).send({ comment: comment });
+        }
+      }
+      await comment.destroy();
+      return res.status(200).send({ message: "Comentario eliminado satisfactoriamente" });
+    }
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+
+  }
 }
 
 module.exports = contentController;

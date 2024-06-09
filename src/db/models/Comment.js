@@ -17,7 +17,7 @@ Comment.init(
   {
     content: {
       type: S.DataTypes.TEXT,
-      allowNull: false,
+      //allowNull: false,
     },
     numberOfReactions: {
       type: S.DataTypes.INTEGER,
