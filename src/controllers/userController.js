@@ -23,9 +23,9 @@ const userRoleModels = {
 
 const userRoleGetMethods = {
   student: "getStudentInfo",
-  teacher: "getStudentInfo",
-  psycho: "getStudentInfo",
-  other: "getStudentInfo"
+  teacher: "getTeacherInfo",
+  psycho: "getPsychoInfo",
+  other: "getOtherInfo"
 };
 
 const userController = {
