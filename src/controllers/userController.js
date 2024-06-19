@@ -14,6 +14,20 @@ const { generateToken } = require("../config/token");
 const { response } = require("../../server");
 //import Sequelize, { Op } from "sequelize";
 
+const userRoleModels = {
+  student: Student,
+  teacher: Teacher,
+  psycho: Psycho,
+  other: UtecMember
+};
+
+const userRoleGetMethods = {
+  student: "getStudentInfo",
+  teacher: "getStudentInfo",
+  psycho: "getStudentInfo",
+  other: "getStudentInfo"
+};
+
 const userController = {
   register: async (req, res) => {
 
@@ -228,15 +242,71 @@ const userController = {
     }
 
   },
-  me: async (req, res) => {
+  // me: async (req, res) => {
 
+  //   try {
+  //     const id = req.user.id;
+  //     const role = req.user.role;
+  //     if (!id) {
+  //       return res.status(400).send({ message: "id no encontrado en el token." });
+  //     }
+  //     else {
+  //       const user = await User.findOne({
+  //         where: { id: id },
+  //         attributes: [
+  //           "name",
+  //           "lastname",
+  //           "email",
+  //           "isAdmin",
+  //           "profileImageUrl",
+  //           "role"
+  //         ],
+  //         include: [
+  //           {
+  //             model: role === "student" ? Student : role === "teacher" ? Teacher : role === "psycho" ? Psycho : UtecMember,
+  //             required: false,
+  //             as: `${role}Info`,
+
+  //           },
+  //           {
+  //             model: User,
+  //             as: "followers",
+  //             through: { model: Follower, attributes: [] },
+  //             foreignKey: "followedId",
+  //             attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+  //           },
+  //           {
+  //             model: User,
+  //             as: "follows",
+  //             through: { model: Follower, attributes: [] },
+  //             foreignKey: "followerId",
+  //             attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
+  //           }
+  //         ]
+  //       });
+  //       if (!user) {
+  //         return res.status(404).json({ message: "Usuario no encontrado." });
+  //       }
+
+  //       return res.status(200).send({
+  //         id: id,
+  //         ...user.get({ plain: true }),
+  //       })
+  //         .status(200);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     return res.status(500).send("Error de servidor");
+  //   }
+  // },
+  me: async (req, res) => {
     try {
       const id = req.user.id;
       const role = req.user.role;
+
       if (!id) {
-        return res.status(400).send({ message: "id no encontrado en el token." });
-      }
-      else {
+        return res.status(400).send({ message: "ID no encontrado en el token." });
+      } else {
         const user = await User.findOne({
           where: { id: id },
           attributes: [
@@ -252,33 +322,47 @@ const userController = {
               model: role === "student" ? Student : role === "teacher" ? Teacher : role === "psycho" ? Psycho : UtecMember,
               required: false,
               as: `${role}Info`,
-
             },
             {
               model: User,
               as: "followers",
-              through: { model: Follower, attributes: [] },
+              through: { attributes: [] }, // No se requieren atributos de la tabla de relaciones
               foreignKey: "followedId",
               attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
             },
             {
               model: User,
               as: "follows",
-              through: { model: Follower, attributes: [] },
+              through: { attributes: [] }, // No se requieren atributos de la tabla de relaciones
               foreignKey: "followerId",
               attributes: ["id", "email", "name", "lastname", "profileImageUrl", "role"]
             }
           ]
         });
+
         if (!user) {
           return res.status(404).json({ message: "Usuario no encontrado." });
         }
 
+        // Convertir el usuario a un objeto plano
+        const userData = user.get({ plain: true });
+
+        // Agregar la propiedad 'status' con un valor predeterminado a cada follower y follow
+        userData.followers = userData.followers.map(follower => ({
+          ...follower,
+          status: "" // Puedes establecer cualquier valor predeterminado que desees
+        }));
+
+        userData.follows = userData.follows.map(follow => ({
+          ...follow,
+          status: "" // Puedes establecer cualquier valor predeterminado que desees
+        }));
+
         return res.status(200).send({
           id: id,
-          ...user.get({ plain: true }),
-        })
-          .status(200);
+          status: "",
+          ...userData,
+        });
       }
     } catch (error) {
       console.error(error);
@@ -341,6 +425,46 @@ const userController = {
         return res.status(404).send({ message: "Usuario no encontrado." });
       }
       return res.status(200).send({ message: "Usuario encontrado", user: user });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send("Error de servidor");
+    }
+  },
+  getUserInfo: async (req, res) => {
+
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        return res.status(400).send({ message: "id no encontrado en el token." });
+      }
+
+      let user = await User.findOne({
+        where: { id: userId },
+        attributes: [
+          "id",
+          "name",
+          "lastname",
+          "email",
+          "isAdmin",
+          "profileImageUrl",
+          "role",
+          "createdAt",
+          "updatedAt"
+        ],
+      });
+
+      // const userInfo = await userRoleModels[user.role].findOne({
+      //   where: {
+      //     userId: user.id,
+      //   }
+      // })
+
+      const userInfo = await user[`${userRoleGetMethods[user.role]}`]();
+      if (!user) {
+        return res.status(400).send({ message: "id no encontrado en el token." });
+      }
+      return res.status(200).send({ ...user.dataValues, [`${user.role}Info`]: userInfo.dataValues });
+
     } catch (error) {
       console.error(error);
       return res.status(500).send("Error de servidor");
@@ -415,7 +539,12 @@ const userController = {
         return res.status(404).send({ message: "Usuario no encontrado" });
       }
 
-      const followers = await user.getFollowers();
+      let followers = await user.getFollowers();
+      followers = followers.map(f => {
+        const followerPlain = f.get({ plain: true }); // Convertir a objeto plano
+        return { ...followerPlain, status: "" }; // Agregar la propiedad 'status'
+      });
+
       return res.status(200).send({ followers: followers });
     } catch (err) {
       console.error(err);
@@ -430,7 +559,12 @@ const userController = {
         return res.status(404).send({ message: "Usuario no encontrado" });
       }
 
-      const follows = await user.getFollows();
+      let follows = await user.getFollows();
+      follows = follows.map(f => {
+        const followPlain = f.get({ plain: true }); // Convertir a objeto plano
+        return { ...followPlain, status: "" }; // Agregar la propiedad 'status'
+      });
+
       return res.status(200).send({ follows: follows });
     } catch (err) {
       console.error(err);

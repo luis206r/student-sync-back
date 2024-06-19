@@ -15,6 +15,7 @@ const Post = require("./Post");
 const Event = require("./Event");
 const Comment = require("./Comment");
 const Follower = require("./Follower");
+const Chat = require("./Chat");
 
 
 // Student.hasMany(Report, { as: 'reports', foreignKey: 'studentId' });
@@ -60,6 +61,7 @@ Comment.hasMany(Comment, { as: "subComments", foreignKey: "parentCommentId" })
 Comment.belongsTo(Comment, { as: "parentComment", foreignKey: "parentCommentId" })
 Comment.belongsTo(User, { as: 'commentOwner', foreignKey: 'userId' });
 
+
 //Post
 //Post.belongsTo(Content);
 
@@ -74,6 +76,8 @@ Group.hasMany(Content, { as: "groupContent" })
 //Message
 Message.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
 Message.belongsTo(User, { as: 'receiver', foreignKey: 'receiverId' });
+//new xd
+
 
 //Student
 Student.hasMany(Report, { as: 'reports' });
@@ -103,6 +107,12 @@ Psycho.belongsToMany(Student, { through: 'StudentPsycho', as: "studentsToAdvise"
 //Reaction.belongsTo(User);
 //Reaction.belongsTo(Content);
 
+//chat
+Message.belongsTo(Chat, { foreignKey: 'chatId' });
+Chat.hasMany(Message, { as: 'messages', foreignKey: 'chatId' });
+Chat.belongsTo(User, { as: 'user1', foreignKey: 'user1Id' });
+Chat.belongsTo(User, { as: 'user2', foreignKey: 'user2Id' });
+
 
 
 
@@ -121,4 +131,5 @@ module.exports = {
   Event,
   Comment,
   Follower,
+  Chat
 };
