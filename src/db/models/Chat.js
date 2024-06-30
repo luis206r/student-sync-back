@@ -49,7 +49,10 @@ class Chat extends S.Model {
         id: this.id,
         user1: user1,
         user2: user2,
-        messages: messages.rows,
+        messages: messages.rows.map(message => ({
+          ...message.toJSON(), // Convertir a objeto plano
+          content: message.decryptedContent(), // Desencriptar contenido
+        })),
         totalCount: messages.count,
         currentPage: page,
         lastId: li,

@@ -20,7 +20,7 @@ router.delete("/deleteMessage/:messageId", controller.messageController.deleteMe
 
 router.post("/createChat/:user1Id/:user2Id", controller.messageController.createChat);
 
-
+router.post("/createMessageE/:user1Id/:user2Id", controller.messageController.createMessageE);
 
 // router.put("/updateMessage/:messageId", controller.messageController.updateMessage)
 

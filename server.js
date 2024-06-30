@@ -82,18 +82,27 @@ io.on("connection", (socket) => {
   // Aquí puedes manejar eventos de Socket.io, como recibir y emitir mensajes
   socket.on("message", (data) => {
     console.log("mensaje recibido: ", data);
+    const existUser = onlineUsers.filter((user) => user.userId === data.receiverId)[0];
+    if (existUser) {
+      socket.to(existUser.socketId).emit('message', data)
+      //socket.broadcast.emit('message', data);
+    }
     //const { message, receiverId, senderId } = data;
     //console.log("Mensaje recibido:", message);
-    socket.broadcast.emit('message', data);
+
     // Aquí puedes emitir el mensaje a todos los clientes conectados
     //io.emit("chat message", msg);
   });
 
   socket.on("newChatMessage", (data) => { //{message, chat}
     console.log("mensaje de nuevo chat recibido: ", data);
+    const existUser = onlineUsers.filter((user) => user.userId === data.message.receiverId)[0];
+    if (existUser) {
+      socket.to(existUser.socketId).emit('newChatMessage', data)
+      //socket.broadcast.emit('newChatMessage', data);
+    }
     //const { message, receiverId, senderId } = data;
     //console.log("Mensaje recibido:", message);
-    socket.broadcast.emit('newChatMessage', data);
     // Aquí puedes emitir el mensaje a todos los clientes conectados
     //io.emit("chat message", msg);
   });

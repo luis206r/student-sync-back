@@ -3,9 +3,59 @@ const { Post, Content, User, Reaction, Comment, Message, Chat } = require("../db
 const { authorize, uploadFile, getFileDownloadUrl, deleteFileFromDrive } = require("../utils/driveUpload/driveUpload");
 const fs = require('fs');
 
-
 const messageController = {
   create: async (req, res) => {
+    try {
+      const { content } = req.body;
+      const { senderId, receiverId } = req.params;
+      if (!content || !senderId || !receiverId) { return res.status(404).send({ message: "incomplete params" }) }
+      const senderUser = await User.findOne({ where: { id: senderId } });
+
+      if (!senderUser) { return res.status(404).send({ message: "there's no sender user" }) }
+
+      const receiverUser = await User.findOne({ where: { id: receiverId } });
+
+      if (!receiverUser) { return res.status(404).send({ message: "there's no receiver user" }) }
+
+      let chat = await Chat.findOne({
+        where: {
+          [Op.or]: [
+            { user1Id: senderId, user2Id: receiverId },
+            { user1Id: receiverId, user2Id: senderId }
+          ]
+        }
+      });
+
+      if (!chat) {
+        chat = await Chat.create({});
+        chat.setUser1(senderUser);
+        chat.setUser2(receiverUser);
+      }
+
+      const message = await Message.create({
+        content: content,
+      });
+      await message.setSender(senderUser);
+      await message.setReceiver(receiverUser);
+
+      message.setChat(chat);
+      let n = chat.numberOfMessages;
+      n++;
+
+      await chat.update({
+        updatedAt: message.createdAt, //para saber cual es el chat con actividad mas reciente 
+        numberOfMessages: n, //
+      })
+
+      return res.status(201).send({ ...message.toJSON(), content: content });
+    }
+
+    catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Error interno del servidor." });
+    }
+  },
+  createMessageE: async (req, res) => {
     try {
       const { content } = req.body;
       const { senderId, receiverId } = req.params;
