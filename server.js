@@ -1,4 +1,5 @@
 // Configuración del server
+require('dotenv').config();
 const express = require("express");
 const app = express();
 const http = require("http");
@@ -7,11 +8,10 @@ const morgan = require("morgan");
 const routes = require("./src/routes");
 const db = require("./src/db/index");
 const cors = require("cors");
-const envs = require("./src/config/envs");
 const cookieParser = require("cookie-parser");
+const org = process.env.CORS_ORIGIN;
 app.use(cookieParser());
-app.use(cors({ origin: "https://student-collab.vercel.app", credentials: true })); // para comunicar entre puertos
-//app.use(cors({ origin: "http://localhost:5173", credentials: true })); // para comunicar entre puertos
+app.use(cors({ origin: org, credentials: true })); // para comunicar entre puertos
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("tiny"));
@@ -27,8 +27,7 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    //origin: "http://localhost:5173", // Origen permitido para conexiones WebSocket
-    origin: "https://student-collab.vercel.app",
+    origin: org,
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true
   }

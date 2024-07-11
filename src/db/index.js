@@ -1,6 +1,5 @@
 const Sequelize = require("sequelize");
-const config = require("../config/envs");
-
+require('dotenv').config();
 // const db = new Sequelize(config.NAME, config.USERNAME, config.PASSWORD, {
 //   host: config.DB_HOST,
 //   dialect: "postgres",
@@ -8,13 +7,14 @@ const config = require("../config/envs");
 // });
 
 
-const db = new Sequelize("student_collab_db",
-  "student_collab_db_user",
-  "Bvv64qjpivdjhhGmOrPyZG9EKz1SZ0nZ",
+const db = new Sequelize(process.env.DB_NAME,
+  process.env.DB_USER || null,
+  process.env.DB_PASSWORD || null,
   {
-    host: "dpg-cp3h4tnsc6pc73fopjug-a",
+    host: process.env.DB_HOST || "localhost",
     dialect: "postgres",
     port: 5432,
+    loggin: true
   });
 
 // const db = new Sequelize("student-collab-db",
